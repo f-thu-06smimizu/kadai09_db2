@@ -1,33 +1,33 @@
 <?php
-// 1. POSTデータ取得
-$pain_point = $_POST['pain_point'] ?? '未入力';
-$category   = $_POST['category'] ?? '未分類';
+session_start();
+include('functions.php');
+check_session_id();
 
-// 2. DB接続（VSコードのファイルで上書きされないよう、ここで直接指定）
-$db_name = 'atora2026_atora_db';
-$db_host = 'mysql3112.db.sakura.ne.jp'; 
-$db_id   = 'atora2026';
-$db_pw   = 'atora_260116'; 
+// 1. input.php の name="pain_point" と一致させる
+$pain = $_POST['pain_point'] ?? null; 
+$category = $_POST['category'] ?? 'Existence'; // デフォルト値
+
+// もし中身が空なら、エラーを出さずに戻す
+if ($pain === null || $pain === '') {
+    exit('入力が空です。前の画面に戻って入力してください。');
+}
+
+// 2. DB接続
+$pdo = db_conn();
+
+// 3. SQL作成 (pre_trip_logs テーブルに保存)
+$sql = 'INSERT INTO pre_trip_logs (id, pain_point, category, indate) VALUES (NULL, :pain, :category, sysdate())';
+
+$stmt = $pdo->prepare($sql);
+$stmt->bindValue(':pain',     $pain,     PDO::PARAM_STR);
+$stmt->bindValue(':category', $category, PDO::PARAM_STR);
 
 try {
-    $pdo = new PDO("mysql:host=$db_host;dbname=$db_name;charset=utf8mb4", $db_id, $db_pw);
+    $status = $stmt->execute();
 } catch (PDOException $e) {
-    // もしエラーが出たら、何が原因か日本語で表示する
-    exit('DB接続エラー発生！理由: ' . $e->getMessage());
+    exit('SQL Error:' . $e->getMessage());
 }
 
-// 3. データ登録
-$stmt = $pdo->prepare("INSERT INTO pre_trip_logs (id, pain_point, category, indate) VALUES (NULL, :pain_point, :category, sysdate())");
-$stmt->bindValue(':pain_point', $pain_point, PDO::PARAM_STR);
-$stmt->bindValue(':category',   $category,   PDO::PARAM_STR);
-$status = $stmt->execute();
-
-if ($status == false) {
-    $error = $stmt->errorInfo();
-    exit("ErrorMessage:" . $error[2]);
-} else {
-    // 成功したら一覧画面へ
-    header("Location: read.php");
-    exit;
-}
-?>
+// 4. 保存が終わったら一覧画面 (read.php) へ飛ばす
+header('Location: read.php');
+exit();
