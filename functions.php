@@ -2,8 +2,8 @@
 function db_conn() {
     $db_name = 'atora2026_atora_db';
     $db_host = 'mysql3112.db.sakura.ne.jp';
-    $db_id   = 'atora2026';
-    $db_pw   = 'A260116_aatora'; 
+    $db_id   = '*****';
+    $db_pw   = '*****'; 
     try {
         $pdo = new PDO("mysql:host={$db_host};dbname={$db_name};charset=utf8", $db_id, $db_pw);
         return $pdo;
